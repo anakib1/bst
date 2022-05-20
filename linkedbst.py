@@ -2,13 +2,15 @@
 File: linkedbst.py
 Author: Ken Lambert
 """
-
+import sys
+sys.setrecursionlimit(100000)
+import time
 from abstractcollection import AbstractCollection
 from bstnode import BSTNode
 from linkedstack import LinkedStack
 from linkedqueue import LinkedQueue
 from math import log
-
+import random
 
 class LinkedBST(AbstractCollection):
     """An link-based binary search tree implementation."""
@@ -232,13 +234,12 @@ class LinkedBST(AbstractCollection):
         Return the height of tree
         :return: int
         '''
-
         def height1(top):
             if top == None:
                 return 0
             else:
                 return 1 + max(height1(top.left), height1(top.right))
-        return height1(self._root)
+        return height1(self._root) - 1
 
     def is_balanced(self):
         '''
@@ -270,7 +271,8 @@ class LinkedBST(AbstractCollection):
                 ans.append(v.data)
             lst.append(v.left)
             lst.append(v.right)
-        return lst
+        ans.sort()
+        return ans
 
     def rebalance(self):
 
@@ -285,11 +287,11 @@ class LinkedBST(AbstractCollection):
         def rec(xd):
             if not xd:
                 return None
-            m = len(items) // 2
+            m = len(xd) // 2
             l = rec(xd[:m])
             r = rec(xd[m + 1:])
             return BSTNode(xd[m], l, r)
-
+        self._size = len(items)
         self._root = rec(items)
 
 
@@ -308,7 +310,7 @@ class LinkedBST(AbstractCollection):
             if v.data > x:
                 z = gt(v.left, x)
                 if z == None:
-                    return v
+                    return v.data
                 return z
             else:
                 z = gt(v.right, x)
@@ -331,7 +333,7 @@ class LinkedBST(AbstractCollection):
             if v.data < x:
                 z = gt(v.right, x)
                 if z == None:
-                    return v
+                    return v.data
                 return z
             else:
                 z = gt(v.left, x)
@@ -346,16 +348,68 @@ class LinkedBST(AbstractCollection):
         :return:
         :rtype:
         """
+        mx = 10000
+        f = open(path, 'r')
+        wrds = []
+        for l in f:
+            wrds.append(l)
+        selected = random.sample(wrds, mx)
+        st = time.time()
+        for i in selected:
+            wrds.index(i)
+        en = time.time()
+        print(f"Time to search {mx} sample in all words in built-in list: {en-st}")
+
+        """
+        We could not manage to add items in this order, because tree depth would be linear, and whole find function would take n^2 time, so program will never execute. 
+        So, we will only try to build tree and test on really small sample. 
+        """
+        print("TESTING NAIVE ADDITION WITH 1000 WORDS")
+        mn = 1000
+        st = time.time()
+        for i in wrds[:mn]:
+           self.add(i)
+        en = time.time()
+        print(f"Time to build binary tree containing all words in sorted order: {en - st}")
+
         
-        z = LinkedBST()
-        z.add(12)
-        z.add(13)
-        z.add(7)
-        z.add(2)
-        z.add(111)
-        z.add(5)
+        st = time.time()
+        for i in wrds[:mn]:
+            assert (self.find(i) != None)
+        en = time.time()
+        print(f"Time to search sample in given binary tree: {en - st}")
 
-        print (z.predecessor(11).data)
-        print (z.successor(11).data)
-        print (z.successor(1111))
+        self.clear()
 
+        print("Testing with random permutation of words")
+        random.shuffle(wrds)
+        st = time.time()
+        for i in wrds:
+           self.add(i)
+        en = time.time()
+        print(f"Time to build binary tree containing all words in random order: {en - st}")
+
+        
+        st = time.time()
+        for i in selected:
+            assert (self.find(i) != None)
+        en = time.time()
+        print(f"Time to search sample in given binary tree: {en - st}")
+
+
+        print("Testing with balanced tree")
+        st = time.time()
+        self.rebalance()
+        en = time.time()
+        print(f"Time to rebalance binary tree: {en - st}")
+
+        
+        st = time.time()
+        for i in selected:
+            assert (self.find(i) != None)
+        en = time.time()
+        print(f"Time to search sample in given balanced binary tree: {en - st}")
+
+
+z = LinkedBST()
+z.demo_bst('words.txt')
